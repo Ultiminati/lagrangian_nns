@@ -10,6 +10,7 @@ from functools import partial
 def unconstrained_eom(model, state, t=None):
   q, q_t = jnp.split(state, 2)
   return model(q, q_t)
+# My guess is that the state represents q and q_t together, and the model is a neural network that takes q and q_t as input.
 
 # lagrangian equation of motion
 def lagrangian_eom(lagrangian, state, t=None):
@@ -21,6 +22,8 @@ def lagrangian_eom(lagrangian, state, t=None):
              - jax.jacobian(jax.jacobian(lagrangian, 1), 0)(q, q_t) @ q_t))
   dt = 1e-1
   return dt*jnp.concatenate([q_t, q_tt])
+# The thing that is being returned here is the thing that we should add to previous state so that we go dt forward in time.
+# This is apparently called the Euler's method.
 
 def raw_lagrangian_eom(lagrangian, state, t=None):
   q, q_t = jnp.split(state, 2)
@@ -29,6 +32,7 @@ def raw_lagrangian_eom(lagrangian, state, t=None):
           @ (jax.grad(lagrangian, 0)(q, q_t)
              - jax.jacobian(jax.jacobian(lagrangian, 1), 0)(q, q_t) @ q_t))
   return jnp.concatenate([q_t, q_tt])
+
 
 def lagrangian_eom_rk4(lagrangian, state, n_updates, Dt=1e-1, t=None):
     @jax.jit
@@ -49,6 +53,7 @@ def lagrangian_eom_rk4(lagrangian, state, n_updates, Dt=1e-1, t=None):
         k3 = dt*cur_fnc(cstate + k2/2)
         k4 = dt*cur_fnc(cstate + k3)
         return update + 1.0/6.0 * (k1 + 2*k2 + 2*k3 + k4)
+    # This is the Runge-Kutta 4th order method. It has an error of O(h^4), better than Euler's method, which is O(h).
     
     update = 0
     for _ in range(n_updates):
@@ -65,6 +70,15 @@ def solve_dynamics(dynamics_fn, initial_state, is_lagrangian=True, **kwargs):
   def f(initial_state):
     return odeint(partial(eom, dynamics_fn), initial_state, **kwargs)
   return f(initial_state)
+
+# I did not get why we use lagrangian_eom that has already been multiplied by dt. 
+# raw_lagrangian_eom is the one I would have expected to be used here.
+
+# dynamics_fn is the function that takes q and q_t as input and computes a function, usually a lagrangian in this context 
+# but it can also be the analytical solution of a system, 
+# so this function is also used to generate the data sets of a known physical system. (though after a second look, there is no instance of it)
+# It can also be the true lagrangian, not the learned one. 
+# inside the eom function, alongside the learned lagrangian true lagrangian can also be differentiated properly to get the equations of motion.
 
 
 def custom_init(init_params, seed=0):
