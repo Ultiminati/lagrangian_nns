@@ -6,8 +6,8 @@ import argparse
 from jax import jit
 from jax.experimental.ode import odeint
 from functools import partial # reduces arguments to function by making some subset implicit
-from jax.example_libraries import stax
-from jax.example_libraries import optimizers
+from jax.experimental import stax
+from jax.experimental import optimizers
 import os, sys, time
 sys.path.append('..')
 sys.path.append('../experiment_dblpend/')
@@ -35,7 +35,7 @@ def learned_dynamics(params):
   return dynamics
 
 
-from jax.example_libraries.stax import serial, Dense, Softplus, Tanh, elementwise, Relu
+from jax.experimental.stax import serial, Dense, Softplus, Tanh, elementwise, Relu
 
 
 sigmoid = jit(lambda x: 1/(1+jnp.exp(-x)))

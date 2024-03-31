@@ -1,7 +1,7 @@
 # Generalized Lagrangian Networks | 2020
 # Miles Cranmer, Sam Greydanus, Stephan Hoyer (...)
 
-from jax.example_libraries import stax
+from jax.experimental import stax
 
 def mlp(args):
     return stax.serial(
